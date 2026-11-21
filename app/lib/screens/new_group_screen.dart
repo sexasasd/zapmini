@@ -23,7 +23,16 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
         children: [
           Padding(padding: const EdgeInsets.all(12), child: TextField(controller: _name, decoration: const InputDecoration(labelText: 'Nome do grupo', border: OutlineInputBorder()))),
           const ListTile(title: Text('Selecione participantes')),
-          Expanded(child: ListView(children: contacts.map((c) => CheckboxListTile(value: _selected.contains(c.id), onChanged: (v) => setState(() => v == true ? _selected.add(c.id) : _selected.remove(c.id)), title: Text(c.name), secondary: CircleAvatar(child: Text(c.avatar))).toList())),
+          Expanded(
+            child: ListView(
+              children: contacts.map((c) => CheckboxListTile(
+                value: _selected.contains(c.id),
+                onChanged: (v) => setState(() => v == true ? _selected.add(c.id) : _selected.remove(c.id)),
+                title: Text(c.name),
+                secondary: CircleAvatar(child: Text(c.avatar)),
+              )).toList(),
+            ),
+          ),
           Padding(padding: const EdgeInsets.all(12), child: SizedBox(width: double.infinity, child: FilledButton(onPressed: () async {
             final name = _name.text.trim();
             if (name.isEmpty || _selected.isEmpty) return;
