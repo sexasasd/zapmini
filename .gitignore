@@ -47,3 +47,6 @@ key.properties
 *.iml
 *.swp
 .DS_Store
+
+# Release artifacts (large binaries)
+releases/*.apk
