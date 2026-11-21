@@ -1,0 +1,30 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Mídia de conversas: caminho sugerido conversations/{conversationId}/{messageId}/{filename}
+    // Restringir acesso real a membros autorizados da conversa (via metadata/claims
+    // ou validação coordenada com Firestore/Functions). Esqueleto inicial:
+    match /conversations/{conversationId}/{allPaths=**} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Mídia de perfil (avatares): guardians/{uid}/... e children/{childId}/...
+    match /guardians/{uid}/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Status (fase futura)
+    match /statuses/{scope}/{allPaths=**} {
+      allow read, write: if isSignedIn();
+    }
+  }
+}
+
+// NOTA: Endurecer antes de lançamento para garantir que apenas participantes
+// autorizados possam ler/gravar mídia de cada conversa.

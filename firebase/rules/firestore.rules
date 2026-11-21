@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isGuardian(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Responsável: dono do documento
+    match /guardians/{uid} {
+      allow read, write: if isGuardian(uid);
+
+      match /children/{childId} {
+        allow read, write: if isGuardian(uid);
+      }
+
+      match /devices/{deviceId} {
+        allow read, write: if isGuardian(uid);
+      }
+    }
+
+    // Contatos aprovados no escopo do responsável
+    match /contacts/{guardianUid}/approved/{contactId} {
+      allow read, write: if isGuardian(guardianUid);
+    }
+
+    // Convites: regras detalhadas devem validar remetente/destinatário e status
+    match /invitations/{inviteId} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if isSignedIn();
+    }
+
+    // Conversas e mensagens: acesso deve ser restrito a membros autorizados
+    // e respeitar vínculos familiares. Implementação completa requer modelagem
+    // de membership (ex.: members subcollection ou mapa de membros) e, em alguns
+    // casos, Cloud Functions para validações complexas.
+    match /conversations/{conversationId} {
+      allow read, write: if isSignedIn();
+
+      match /members/{memberKey} {
+        allow read, write: if isSignedIn();
+      }
+
+      match /messages/{messageId} {
+        allow read, create: if isSignedIn();
+        allow update, delete: if isSignedIn();
+      }
+    }
+
+    // Status e chamadas (fases futuras): restringir por audiência/participantes
+    match /statuses/{scope}/items/{statusId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /calls/{callId} {
+      allow read, write: if isSignedIn();
+    }
+  }
+}
+
+// NOTA: Estas regras são um ESQUELETO inicial para desenvolvimento.
+// Antes de testes ampliados ou lançamento, endurecer regras para:
+// - validar membership em conversas/mensagens
+// - garantir que perfis infantis só atuem dentro do escopo do responsável
+// - restringir leitura/escrita de convites aos envolvidos
+// - impedir escalação de privilégios e acessos indevidos
